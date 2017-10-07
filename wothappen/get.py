@@ -104,7 +104,6 @@ def getKeyPhrases(chatText, accessKey):
 	# body = json.dumps(getLanguage(chatText, accessKey))
 	body = str(createTextStream(chatText))
 
-	print(body)
 	conn.request("POST", path, body, headers)
 	response = conn.getresponse()
 	returnedJson = json.loads(response.read().decode('utf-8'))
@@ -126,6 +125,5 @@ for message in messages.all:
 for k,v in messagesByDate.items():
 	keyPhrases = getKeyPhrases(v, ACCESS_KEY)
 	print("On " + k + " the conversation was about ", end="")
-	print(keyPhrases)
-	# for phrase in keyPhrases:
-	# 	print(phrase + ", ", end="")
+	for phrase in keyPhrases:
+		print(phrase + ", ", end="")
