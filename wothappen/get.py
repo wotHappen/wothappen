@@ -6,6 +6,7 @@ class ChatText:
 	def __init__(self, roomId):
 		self.roomId = roomId
 		self.texts = []
+		self.times = []
 		params = {
 			'Authorization': "Bearer ODYyNzQ3ZGYtMTM3Zi00ZmE5LTk3MTctM2U5YjViYTQ4MjFhYzkxZmIzNzUtZGI2",
 			'Content-Type': "application/json; charset=utf-8"
@@ -14,6 +15,7 @@ class ChatText:
 		self.json = json.loads(r.text)
 		for item in self.json["items"]:
 			self.texts.append(item["text"])
+			self.times.append(item["created"])
 		self.texts.reverse()
 
 
@@ -46,8 +48,6 @@ def createDocument(chatText):
 # 	print(doc)
 # 	return doc
 
-
-
 def getSentiment(chatText, accessKey):
 	uri = 'westus.api.cognitive.microsoft.com'
 	path = '/text/analytics/v2.0/sentiment'
@@ -69,7 +69,13 @@ def getSentiment(chatText, accessKey):
 
 	return doc['documents']
 
+def getOverallSentiment(messages):
+	overall = 0
+	size = 0
+	for message in messages:
+		size += 1
+		overall += message['score']
+	return overall / size
 
-
-print(getSentiment(ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a"), "e58438c7303146b79f63134b261d5b29"))
-
+messages = getSentiment(ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a"), "e58438c7303146b79f63134b261d5b29")
+print(getOverallSentiment(messages))

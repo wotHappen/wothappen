@@ -13,6 +13,3 @@ def getMessages(_roomId):
   }
   roomMessages = requests.get(url, headers=headers)
   return roomMessages
-
-messages = getMessages("df53038c-1940-355e-aa24-e4bc8d67b64a")
-print(messages.text)
