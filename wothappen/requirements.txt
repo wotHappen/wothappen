@@ -1,3 +1,7 @@
+requests
+json
+http
+urllib
 sumy
 nltk
 numpy
