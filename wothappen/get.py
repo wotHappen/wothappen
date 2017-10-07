@@ -2,9 +2,12 @@ import requests
 import json
 import http, urllib
 
+ACCESS_KEY = "e58438c7303146b79f63134b261d5b29"
+
 class ChatText:
 	def __init__(self, roomId):
 		self.roomId = roomId
+		self.all = []
 		self.texts = []
 		self.times = []
 		params = {
@@ -14,10 +17,10 @@ class ChatText:
 		r = requests.get("https://api.ciscospark.com/v1/messages?roomId=" + self.roomId, headers=params)
 		self.json = json.loads(r.text)
 		for item in self.json["items"]:
+			self.all.append(item)
 			self.texts.append(item["text"])
 			self.times.append(item["created"])
 		self.texts.reverse()
-
 
 def createDocument(chatText):
 	doc = {'documents': []}
@@ -25,6 +28,21 @@ def createDocument(chatText):
 	for text in chatText.texts:
 		doc['documents'].append({'id': str(counter), 'language': 'en', 'text': text})
 		counter += 1
+	return doc
+
+def createTextStream(chatText):
+	doc = {'documents': [
+		{
+			'id': '1',
+			'language': 'en',
+			'text': '',
+		}
+	]}
+	for text in chatText:
+		if type(text) is str:
+			doc['documents'][0]['text'] += text + ". "
+		else:
+			doc['documents'][0]['text'] += text.decode('utf-8') + ". "
 	return doc
 
 # def getLanguage(chatText, accessKey):
@@ -77,5 +95,37 @@ def getOverallSentiment(messages):
 		overall += message['score']
 	return overall / size
 
-messages = getSentiment(ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a"), "e58438c7303146b79f63134b261d5b29")
-print(getOverallSentiment(messages))
+def getKeyPhrases(chatText, accessKey):
+	uri = 'westus.api.cognitive.microsoft.com'
+	path = '/text/analytics/v2.0/keyPhrases'
+
+	headers = {'Ocp-Apim-Subscription-Key': accessKey}
+	conn = http.client.HTTPSConnection(uri)
+	# body = json.dumps(getLanguage(chatText, accessKey))
+	body = str(createTextStream(chatText))
+
+	print(body)
+	conn.request("POST", path, body, headers)
+	response = conn.getresponse()
+	returnedJson = json.loads(response.read().decode('utf-8'))
+
+	return returnedJson['documents'][0]['keyPhrases']
+
+messages = ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a")
+sentiments = getSentiment(messages, ACCESS_KEY)
+print(getOverallSentiment(sentiments))
+
+messagesByDate = {}
+for message in messages.all:
+	key = message["created"][:10]
+	value = message["text"]
+	if key not in messagesByDate:
+		messagesByDate[key] = []
+	messagesByDate[key].append(value)
+
+for k,v in messagesByDate.items():
+	keyPhrases = getKeyPhrases(v, ACCESS_KEY)
+	print("On " + k + " the conversation was about ", end="")
+	print(keyPhrases)
+	# for phrase in keyPhrases:
+	# 	print(phrase + ", ", end="")
