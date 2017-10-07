@@ -1,0 +1,1 @@
+The front end for the 1-click bomb app.
