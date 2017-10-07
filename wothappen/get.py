@@ -16,16 +16,28 @@ class ChatText:
 		self.all = []
 		self.texts = []
 		self.times = []
+
+		url = "https://api.ciscospark.com/v1/messages?roomId=" + self.roomId
 		params = {
 			'Authorization': "Bearer ODYyNzQ3ZGYtMTM3Zi00ZmE5LTk3MTctM2U5YjViYTQ4MjFhYzkxZmIzNzUtZGI2",
 			'Content-Type': "application/json; charset=utf-8"
 		}
-		r = requests.get("https://api.ciscospark.com/v1/messages?roomId=" + self.roomId, headers=params)
-		self.json = json.loads(r.text)
-		for item in self.json["items"]:
-			self.all.append(item)
-			self.texts.append(item["text"])
-			self.times.append(item["created"])
+
+		num_iterations = 0
+		while True:
+			num_iterations += 1
+			if num_iterations > 10 or not url:
+				break
+			print(url)
+			r = requests.get(url, headers=params)
+			self.json = json.loads(r.text)
+			url = r.headers.get('Link', None)
+			if url:
+				url = url[1:url.find(';')-1]
+			for item in self.json["items"]:
+				self.all.append(item)
+				self.texts.append(item["text"])
+				self.times.append(item["created"])
 		self.texts.reverse()
 
 def createDocument(chatText):
@@ -37,6 +49,15 @@ def createDocument(chatText):
 	return doc
 
 def createTextStream(chatText):
+	textstream = ''
+	for text in chatText:
+		if type(text) is str:
+			textstream += text + ". "
+		else:
+			textstream += text.decode('utf-8') + ". "
+	return textstream
+
+def createTextStreamMicrosoft(chatText):
 	doc = {'documents': [
 		{
 			'id': '1',
@@ -49,6 +70,7 @@ def createTextStream(chatText):
 			doc['documents'][0]['text'] += text + ". "
 		else:
 			doc['documents'][0]['text'] += text.decode('utf-8') + ". "
+
 	return doc
 
 # def getLanguage(chatText, accessKey):
@@ -124,8 +146,7 @@ def getSummary(chatText):
 	summarizer = Summarizer(stemmer)
 	summarizer.stop_words = get_stop_words("english")
 
-	for sentence in summarizer(parser.document, 5):
-			print(sentence)
+	return summarizer(parser.document, 5)
 
 messages = ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a")
 sentiments = getSentiment(messages, ACCESS_KEY)
@@ -140,8 +161,10 @@ for message in messages.all:
 	messagesByDate[key].append(value)
 
 for k,v in messagesByDate.items():
+	print("Summary of the conversation on " + k + ":")
 	summaries = getSummary(v)
+	for sentence in summaries[4:]:
+		print(sentence)
 	# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
-	# print("On " + k + " the conversation was about ", end="")
 	# for phrase in keyPhrases:
 	# 	print(phrase + ", ", end="")
