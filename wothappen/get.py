@@ -2,6 +2,15 @@ import requests
 import json
 import http, urllib
 
+import nltk
+nltk.download('punkt')
+
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer as Summarizer
+from sumy.nlp.stemmers import Stemmer
+from sumy.utils import get_stop_words
+
 ACCESS_KEY = "e58438c7303146b79f63134b261d5b29"
 
 class ChatText:
@@ -110,6 +119,17 @@ def getKeyPhrases(chatText, accessKey):
 
 	return returnedJson['documents'][0]['keyPhrases']
 
+def getSummary(chatText):
+	body = str(createTextStream(chatText))
+	parser = PlaintextParser.from_string(body, Tokenizer("english"))
+	stemmer = Stemmer("english")
+
+	summarizer = Summarizer(stemmer)
+	summarizer.stop_words = get_stop_words("english")
+
+	for sentence in summarizer(parser.document, 5):
+			print(sentence)
+
 messages = ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a")
 sentiments = getSentiment(messages, ACCESS_KEY)
 print(getOverallSentiment(sentiments))
@@ -123,7 +143,8 @@ for message in messages.all:
 	messagesByDate[key].append(value)
 
 for k,v in messagesByDate.items():
-	keyPhrases = getKeyPhrases(v, ACCESS_KEY)
-	print("On " + k + " the conversation was about ", end="")
-	for phrase in keyPhrases:
-		print(phrase + ", ", end="")
+	summaries = getSummary(v)
+	# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
+	# print("On " + k + " the conversation was about ", end="")
+	# for phrase in keyPhrases:
+	# 	print(phrase + ", ", end="")
