@@ -1,12 +1,24 @@
 import React, { Component } from 'react';
 import { Container, Jumbotron, FormGroup, Label, Input, Button } from 'reactstrap';
+import axios from 'axios';
 import logo from './logo.svg';
 import './App.css';
 
 class App extends Component {
-  bomb() {
-
+  constructor() {
+    super();
+    this.state = {
+      currentUser: "John"
+    }
   }
+
+  bomb() {
+    axios.post("/bomb?username=" + this.state.currentUser)
+    .then(function (response) {
+      console.log(response);
+    });
+  }
+  
   render() {
     return (
       <div className="App flexbox-row">
