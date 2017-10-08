@@ -148,23 +148,34 @@ def getSummary(chatText):
 
 	return summarizer(parser.document, 5)
 
-messages = ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a")
-sentiments = getSentiment(messages, ACCESS_KEY)
-print(getOverallSentiment(sentiments))
+def getMessages():
+	return ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a")
 
-messagesByDate = {}
-for message in messages.all:
-	key = message["created"][:10]
-	value = message["text"]
-	if key not in messagesByDate:
-		messagesByDate[key] = []
-	messagesByDate[key].append(value)
+def output():
+	ret = ""
 
-for k,v in messagesByDate.items():
-	print("Summary of the conversation on " + k + ":")
-	summaries = getSummary(v)
-	for sentence in summaries[4:]:
-		print(sentence)
-	# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
-	# for phrase in keyPhrases:
-	# 	print(phrase + ", ", end="")
+	# Return sentiments
+	sentiments = getSentiment(messages, ACCESS_KEY)
+	ret += "Your group has an overall sentiment of " + getOverallSentiment(sentiments) + '\n'
+
+	# Group messages by date
+	messagesByDate = {}
+	for message in messages.all:
+		key = message["created"][:10]
+		value = message["text"]
+		if key not in messagesByDate:
+			messagesByDate[key] = []
+		messagesByDate[key].append(value)
+
+	# Return message summaries by date
+	for k,v in messagesByDate.items():
+		ret += "Summary of the conversation on " + k + ":"
+		summaries = getSummary(v)
+		for sentence in summaries[4:]:
+			ret += sentence
+		ret += '\n'
+		# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
+		# for phrase in keyPhrases:
+		# 	ret += phrase + ", "
+
+	return ret
