@@ -168,7 +168,7 @@ def current_mood(messages):
 	count = 0
 	totalSentiment = 0
 	for message in messages:
-		timeOfM = parse_date(message['date'])
+		timeOfM = parse_date(message['created'][:19])
 		if (now - timeOfM).TotalHours <= 2:
 			count += 1
 			totalSentiment += message['sentiment']
