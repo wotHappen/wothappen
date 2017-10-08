@@ -43,7 +43,7 @@ def sendConnReply(roomId, output):
 app = Flask(__name__)
 
 @app.route('/', methods=['POST'])
-def handler:
+def handler():
   data = getRequestData() # dict
 
   message = getConnMessageBody(data['id']) # json

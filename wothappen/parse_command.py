@@ -48,14 +48,14 @@ RandomTemplateStrings_5 = [
 
 
 def parse(s, roomId):
-	cmd = str(s).strip()
+	cmd = str(s).strip().split()
 
-	if len(cmd) <= 0:
+	if len(cmd) <= 1:
 		return processEmptyQuery()
-	elif cmd[0] == '?':
-		return processStrictCommand(cmd[1:], roomId)
+	elif cmd[1][0] == '?':
+		return processStrictCommand(" ".join(cmd[1:])[1:], roomId)
 	else:
-		return processSpeculation(cmd, roomId)
+		return processSpeculation(" ".join(cmd[1:]), roomId)
 
 
 def processEmptyQuery():
@@ -113,7 +113,7 @@ def processSpeculation(cmd, roomId):
 
 	if keyword_count > 0 and keyword_count >= summary_count and keyword_count >= sentiment_count:
 		return "You may want to know about keywords:\n" + caseKeyword(roomId)
-	elif sentiment_count > 0 and sentiment_count >= summary_lst:
+	elif sentiment_count > 0 and sentiment_count >= summary_count:
 		return "You may want to know about moods:\n" + caseSentiment(roomId)
 	elif summary_count > 0:
 		return "You may want to know about group summary:\n" + caseSummary(roomId)
