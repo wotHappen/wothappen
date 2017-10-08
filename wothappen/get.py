@@ -28,7 +28,6 @@ class ChatText:
 			num_iterations += 1
 			if num_iterations > 10 or not url:
 				break
-			print(url)
 			r = requests.get(url, headers=params)
 			self.json = json.loads(r.text)
 			url = r.headers.get('Link', None)
@@ -148,15 +147,17 @@ def getSummary(chatText):
 
 	return summarizer(parser.document, 5)
 
-def getMessages():
-	return ChatText("df53038c-1940-355e-aa24-e4bc8d67b64a")
+def getMessages(roomId):
+	# "df53038c-1940-355e-aa24-e4bc8d67b64a"
+	return ChatText(roomId)
 
-def output():
+def output(roomId):
 	ret = ""
+	messages = getMessages(roomId)
 
 	# Return sentiments
 	sentiments = getSentiment(messages, ACCESS_KEY)
-	ret += "Your group has an overall sentiment of " + getOverallSentiment(sentiments) + '\n'
+	ret += "Your group has an overall sentiment of " + str(getOverallSentiment(sentiments)) + "\n"
 
 	# Group messages by date
 	messagesByDate = {}
@@ -169,11 +170,11 @@ def output():
 
 	# Return message summaries by date
 	for k,v in messagesByDate.items():
-		ret += "Summary of the conversation on " + k + ":"
+		ret += "Summary of the conversation on " + k + ": "
 		summaries = getSummary(v)
 		for sentence in summaries[4:]:
-			ret += sentence
-		ret += '\n'
+			ret += str(sentence)
+		ret += "\n"
 		# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
 		# for phrase in keyPhrases:
 		# 	ret += phrase + ", "
