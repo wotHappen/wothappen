@@ -10,6 +10,9 @@ from sumy.utils import get_stop_words
 
 ACCESS_KEY = "e58438c7303146b79f63134b261d5b29"
 
+BOT_ID = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNDc5NTE1MS0yODg5LTQ1NzUtOGNhZC0zYjZiOWUzOTNmMWQ"
+BOT_ACCESS_TOKEN = "OThiZGYxOTEtZTE0Zi00ZTMzLTljMDktOWMyYjIxYzAyZjBkZmI2YTZjNmItZjg0"
+
 class ChatText:
 	def __init__(self, roomId):
 		self.roomId = roomId
@@ -33,10 +36,11 @@ class ChatText:
 			url = r.headers.get('Link', None)
 			if url:
 				url = url[1:url.find(';')-1]
-			for item in self.json["items"]:
-				self.all.append(item)
-				self.texts.append(item["text"])
-				self.times.append(item["created"])
+			if self.json.get("items", None):
+				for item in self.json["items"]:
+					self.all.append(item)
+					self.texts.append(item["text"])
+					self.times.append(item["created"])
 		self.texts.reverse()
 
 def createDocument(chatText):
@@ -166,7 +170,8 @@ def output(roomId):
 		value = message["text"]
 		if key not in messagesByDate:
 			messagesByDate[key] = []
-		messagesByDate[key].append(value)
+		if message["personEmail"] != "wothappen@sparkbot.io" and "WotHappen" not in value:
+			messagesByDate[key].append(value)
 
 	# Return message summaries by date
 	for k,v in messagesByDate.items():
