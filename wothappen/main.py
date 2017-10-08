@@ -5,40 +5,55 @@ import requests
 import get
 import csutils
 
-BOT_ID = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNDc5NTE1MS0yODg5LTQ1NzUtOGNhZC0zYjZiOWUzOTNmMWQ"
-BOT_ACCESS_TOKEN = "OThiZGYxOTEtZTE0Zi00ZTMzLTljMDktOWMyYjIxYzAyZjBkZmI2YTZjNmItZjg0"
+import parse_command
+
+'''
+Read config.json for BOT data
+'''
+config = ""
+with open('config.json') as config_file:    
+  config = json.load(config_file)
+
+BOT_ID = config["BOT_ID"]
+BOT_ACCESS_TOKEN = config["BOT_ACCESS_TOKEN"]
+PORT = int(config["PORT"])
+
+PARAMS = {
+  'Authorization': "Bearer " + BOT_ACCESS_TOKEN,
+  'Content-Type': "application/json; charset=utf-8"
+}
+
+def getRequestData():
+  return request.json['data']
+
+def getConnMessageBody(id):
+  url = "https://api.ciscospark.com/v1/messages/" + str(id)
+  return json.loads(requests.get(url, headers=PARAMS).text)
+
+def sendConnReply(roomId, output):
+  payload = {
+    "roomId": roomId,
+    "text": output
+  }
+  posturl = 'https://api.ciscospark.com/v1/messages'  
+  print(roomId)
+  print(output)
+  res = requests.post(posturl, json=payload, headers=PARAMS)
 
 app = Flask(__name__)
 
 @app.route('/', methods=['POST'])
-def test():
-  json_file =request.json
-  data = json_file['data']
+def handler:
+  data = getRequestData() # dict
 
-  url = "https://api.ciscospark.com/v1/messages/" + data['id']
-  getParams = {
-    'Authorization': "Bearer NmZlNGIzNjktMTc3YS00MDM1LTk0NDAtNzQ0MzFkZWJmNzk0Zjc2M2E1YTItOWU1",
-    'Content-Type': "application/json; charset=utf-8"
-  }
-  # the message that prompts the bot to react
-  message = json.loads(requests.get(url, headers=getParams).text)
+  message = getConnMessageBody(data['id']) # json
 
-  # if 'show me the insights' in message.text and BOT_ID in message.mentionedPeople:
-  output = str(get.output(data['roomId']))
-  payload = {
-    "roomId": data['roomId'],
-    "text": output
-  }
-  posturl = 'https://api.ciscospark.com/v1/messages'  
+  reply = parse_command.parse(message['text'], data['roomId'])
 
-  print(data['roomId'])
-  print(output)
-  botParams = {
-    'Authorization': "Bearer " + BOT_ACCESS_TOKEN,
-    'Content-Type': "application/json; charset=utf-8"
-  }
-  res = requests.post(posturl, json=payload, headers=botParams)
+  sendConnReply(data['roomId'], reply)
+
   return 'post firehose all', 200
 
+
 if __name__ == "__main__":
-  app.run(port=4041, debug=True)
+  app.run(port=PORT, debug=True)

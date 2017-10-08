@@ -10,8 +10,19 @@ from sumy.utils import get_stop_words
 
 ACCESS_KEY = "e58438c7303146b79f63134b261d5b29"
 
-BOT_ID = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNDc5NTE1MS0yODg5LTQ1NzUtOGNhZC0zYjZiOWUzOTNmMWQ"
-BOT_ACCESS_TOKEN = "OThiZGYxOTEtZTE0Zi00ZTMzLTljMDktOWMyYjIxYzAyZjBkZmI2YTZjNmItZjg0"
+# BOT_ID = "Y2lzY29zcGFyazovL3VzL1BFT1BMRS9mNDc5NTE1MS0yODg5LTQ1NzUtOGNhZC0zYjZiOWUzOTNmMWQ"
+# BOT_ACCESS_TOKEN = "OThiZGYxOTEtZTE0Zi00ZTMzLTljMDktOWMyYjIxYzAyZjBkZmI2YTZjNmItZjg0"
+
+'''
+Read config.json for BOT data
+'''
+config = ""
+with open('config.json') as config_file:    
+  config = json.load(config_file)
+
+BOT_ID = config["BOT_ID"]
+BOT_ACCESS_TOKEN = config["BOT_ACCESS_TOKEN"]
+
 
 class ChatText:
 	def __init__(self, roomId):
@@ -76,27 +87,6 @@ def createTextStreamMicrosoft(chatText):
 
 	return doc
 
-# def getLanguage(chatText, accessKey):
-# 	doc = createDocument(chatText)
-
-# 	uri = 'westus.api.cognitive.microsoft.com'
-# 	path = '/text/analytics/v2.0/languages'
-
-# 	print("Hello")
-
-# 	headers = {'Ocp-Apim-Subscription-Key': accessKey}
-# 	conn = http.client.HTTPSConnection(uri)
-# 	body = json.dumps (doc)
-# 	conn.request ("POST", path, body, headers)
-# 	response = conn.getresponse ()
-# 	result = json.loads(json.dumps(response.read ()))
-
-# 	for index, item in result["documents"]:
-# 		doc["documents"][index]["language"] = ["detectedLanguages"]["iso6391Name"]
-
-# 	print(doc)
-# 	return doc
-
 def getSentiment(chatText, accessKey):
 	uri = 'westus.api.cognitive.microsoft.com'
 	path = '/text/analytics/v2.0/sentiment'
@@ -154,6 +144,61 @@ def getSummary(chatText):
 def getMessages(roomId):
 	# "df53038c-1940-355e-aa24-e4bc8d67b64a"
 	return ChatText(roomId)
+
+
+
+def outputSentiment(roomId):
+	messages = getMessages(roomId)
+	return getOverallSentiment(getSentiment(messages, ACCESS_KEY))
+
+def outputSummary(roomId):
+	ret = ""
+	messages = getMessages(roomId)
+	messagesByDate = {}
+	for message in messages.all:
+		key = message["created"][:10]
+		value = message["text"]
+		if key not in messagesByDate:
+			messagesByDate[key] = []
+		messagesByDate[key].append(value)
+
+	# Return message summaries by date
+	for k,v in messagesByDate.items():
+		#ret += "Summary of the conversation on " + k + ": "
+		summaries = getSummary(v)
+		for sentence in summaries[4:]:
+			ret += str(sentence) + " (" + k + ")"
+		ret += "\n"
+		# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
+		# for phrase in keyPhrases:
+		# 	ret += phrase + ", "
+
+	return ret
+
+def outputKeyPhrases(roomId):
+	ret = ""
+	messages = getMessages(roomId)
+	messagesByDate = {}
+	for message in messages.all:
+		key = message["created"][:10]
+		value = message["text"]
+		if key not in messagesByDate:
+			messagesByDate[key] = []
+		messagesByDate[key].append(value)
+
+	# Return message summaries by date
+	for k,v in messagesByDate.items():
+		keyPhrases = getKeyPhrases(v, ACCESS_KEY)
+		isFirst = True
+		for phrase in keyPhrases:
+			if isFirst:
+				isFirst = False
+			else:
+				ret += ","
+			ret += phrase
+	return ret + " (" + k + ")"
+
+
 
 def output(roomId):
 	ret = ""
