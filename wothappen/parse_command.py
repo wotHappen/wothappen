@@ -63,16 +63,16 @@ def processEmptyQuery():
 
 def processStrictCommand(cmd, roomId):
 	cmd_lst = cmd.split()
-	if len(cmd) <= 0:
+	if len(cmd_lst) <= 0:
 		return selectRandomFrom(EmptyCommandStrings)
 	else:
-		if cmd[0] == 'mood' or cmd[0] == 'feel' or cmd[0] == 'feeling' or cmd[0] == 'sentiment':
+		if cmd_lst[0] == 'mood' or cmd_lst[0] == 'feel' or cmd_lst[0] == 'feeling' or cmd_lst[0] == 'sentiment':
 			return caseSentiment(roomId)
-		elif cmd[0] == 'sum' or cmd[0] == 'summary':
+		elif cmd_lst[0] == 'sum' or cmd_lst[0] == 'summary':
 			return caseSummary(roomId)
-		elif cmd[0] == 'keyword':
+		elif cmd_lst[0] == 'keyword':
 			return caseKeyword(roomId)
-		elif cmd[0] == 'easteregg':
+		elif cmd_lst[0] == 'easteregg':
 			return r"""
 			  ___
 			 /   \
@@ -109,7 +109,7 @@ def processSpeculation(cmd, roomId):
 		elif word in sentiment_lst:
 			sentiment_count += 1
 		elif word in summary_lst:
-			summary_lst += 1
+			summary_count += 1
 
 	if keyword_count > 0 and keyword_count >= summary_count and keyword_count >= sentiment_count:
 		return "You may want to know about keywords:\n" + caseKeyword(roomId)
@@ -124,11 +124,11 @@ def processSpeculation(cmd, roomId):
 def caseSentiment(roomId):
 	sentiment = float(get.outputSentiment(roomId))
 	pair = []
-	if sentiment < 0.2:
+	if sentiment < 0.4:
 		pair = ['\U0001F631', 0]
-	elif sentiment < 0.4:
+	elif sentiment < 0.47:
 		pair = ['\U0001F630', 1]
-	elif sentiment < 0.6:
+	elif sentiment < 0.53:
 		pair = ['\U0001F633', 2]
 	elif sentiment < 0.8:
 		pair = ['\U0001F60A', 3]
@@ -151,11 +151,11 @@ def caseSentiment(roomId):
 	return ret
 
 def caseSummary(roomId):
-	ret = "Here is the chat summary: \n"
-	ret += get.outputSummary(roomId)
-	return ret
+	ret1 = "Here is the chat summary: \n"
+	ret1 = get.outputSummaries(roomId)
+	return ret1
 
 def caseKeyword(roomId):
-	ret = "Here is the chat keywords: \n"
-	ret += get.outputKeyPhrases(roomId)
+	# ret = "Here is the chat keywords: \n"
+	ret = get.outputKeyPhrases(roomId)
 	return ret

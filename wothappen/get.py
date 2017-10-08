@@ -100,6 +100,11 @@ def getSentiment(chatText, accessKey):
 	conn.request("POST", path, body, headers)
 	response = conn.getresponse()
 	returnedJson = json.loads(response.read().decode('utf-8'))
+	
+	while "documents" not in returnedJson:
+		conn.request("POST", path, body, headers)
+		response = conn.getresponse()
+		returnedJson = json.loads(response.read().decode('utf-8'))
 
 	index = 0
 	for item in returnedJson['documents']:
@@ -113,7 +118,8 @@ def getOverallSentiment(messages):
 	size = 0
 	for message in messages:
 		size += 1
-		overall += message['score']
+		if message.get('score'):
+			overall += message['score']
 	return overall / size
 
 def getKeyPhrases(chatText, accessKey):
@@ -123,7 +129,7 @@ def getKeyPhrases(chatText, accessKey):
 	headers = {'Ocp-Apim-Subscription-Key': accessKey}
 	conn = http.client.HTTPSConnection(uri)
 	# body = json.dumps(getLanguage(chatText, accessKey))
-	body = str(createTextStream(chatText))
+	body = createTextStreamMicrosoft(chatText)
 
 	conn.request("POST", path, body, headers)
 	response = conn.getresponse()
@@ -145,13 +151,11 @@ def getMessages(roomId):
 	# "df53038c-1940-355e-aa24-e4bc8d67b64a"
 	return ChatText(roomId)
 
-
-
 def outputSentiment(roomId):
 	messages = getMessages(roomId)
 	return getOverallSentiment(getSentiment(messages, ACCESS_KEY))
 
-def outputSummary(roomId):
+def outputSummaries(roomId):
 	ret = ""
 	messages = getMessages(roomId)
 	messagesByDate = {}
@@ -160,14 +164,14 @@ def outputSummary(roomId):
 		value = message["text"]
 		if key not in messagesByDate:
 			messagesByDate[key] = []
-		messagesByDate[key].append(value)
-
+		if message["personEmail"] != "wothappen@sparkbot.io" and "WotHappen" not in value:
+			messagesByDate[key].append(value)
 	# Return message summaries by date
 	for k,v in messagesByDate.items():
-		#ret += "Summary of the conversation on " + k + ": "
+		ret += "Summary of the conversation on " + k + ": "
 		summaries = getSummary(v)
 		for sentence in summaries[4:]:
-			ret += str(sentence) + " (" + k + ")"
+			ret += str(sentence)
 		ret += "\n"
 		# keyPhrases = getKeyPhrases(v, ACCESS_KEY)
 		# for phrase in keyPhrases:
@@ -197,8 +201,6 @@ def outputKeyPhrases(roomId):
 				ret += ","
 			ret += phrase
 	return ret + " (" + k + ")"
-
-
 
 def output(roomId):
 	ret = ""
