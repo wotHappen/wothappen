@@ -155,6 +155,41 @@ def getMessages(roomId):
 	# "df53038c-1940-355e-aa24-e4bc8d67b64a"
 	return ChatText(roomId)
 
+# returns an emoji signifying the mood of the chat in the last 2 hours
+# Angry: 0x1f47f
+# less : 0x1f620
+# meh  : 0x1f611
+# smile: 0x1f60c
+# wide smile: 0x1f604
+
+# sleeping: 0x1f634
+def current_mood(messages):
+	now = datetime.datetime.now()
+	count = 0
+	totalSentiment = 0
+	for message in messages:
+		timeOfM = parse_date(message['date'])
+		if (now - timeOfM).TotalHours <= 2:
+			count += 1
+			totalSentiment += message['sentiment']
+
+	if count == 0:
+		return '0x1f634'
+
+	aveSentiment = totalSentiment / float(count)
+
+	if aveSentiment < 0.4:
+		return '0x1f47f'
+	elif aveSentiment < 0.47:
+		return '0x1f620'
+	elif aveSentiment < 0.53:
+		return '0x1f611'
+	elif aveSentiment < 0.6:
+		return '0x1f60c'
+	else
+		return '0x1f604'
+
+
 def output(roomId):
 	ret = ""
 	messages = getMessages(roomId)
