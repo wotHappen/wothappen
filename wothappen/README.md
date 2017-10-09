@@ -20,3 +20,9 @@ Alternatively, run:
 ```
 pip install -r requirements.txt
 ```
+
+## Learn More
+
+Official page: https://wothappen.github.io
+
+Devpost: https://devpost.com/software/wothappen
